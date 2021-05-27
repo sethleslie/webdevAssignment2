@@ -85,6 +85,9 @@ router.post("/api/login", async (context) => {
 
     if (!matches) {
       console.log("Incorrect password");
+      context.response.status = 400;
+      context.response.body = {"error": "Requires a name or a password"};
+    return;
     } else {
       console.log(`Password matches! Welcome ${db_user.user_full_name}`);
     }

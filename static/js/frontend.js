@@ -37,6 +37,13 @@
         };
       });
     } */
+const loadPoems = (userName) => {
+    console.log(`Now we can load all the poems for user: ${userName}`);
+};
+
+const showError = (error) => {
+    alert("User name and password not valid! Please try again");
+};
 
 const login = () => {
     const username = document.getElementById("username-input").value;
@@ -51,9 +58,14 @@ const login = () => {
             user_name: username,
             user_pw: password,
           }),
-    }) 
-        .then((response) => {
-        console.log("Is this what is undefined:")
-        console.log("Front End Response: " + response.body);
-        })
-}
+    })
+    .then((res) => {
+        if (res.status !== 201) {
+          throw `Couldn't sign in!`;
+        }
+        loadPoems(username);
+      })
+      .catch((error) => {
+        showError(error);
+      });
+  };
