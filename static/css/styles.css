@@ -1,0 +1,29 @@
+.topic-delete-btn {
+  float: right;
+}
+
+.topic-item {
+  max-width: 400px;
+  margin: 40px;
+}
+
+.topic-item > a {
+  text-decoration: underline;
+  color: blue;
+}
+
+#login,
+#add-topic {
+  width: 500px;
+}
+
+input[type="text"], [type="password"],
+textarea {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
