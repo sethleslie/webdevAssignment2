@@ -37,19 +37,31 @@
         };
       });
     } */
-const loadPoems = (userName) => {
-    console.log(`Now we can load all the poems for user: ${userName}`);
-};
+const PORT = 3000;
 
-const showError = (error) => {
-    alert("User name and password not valid! Please try again");
-};
+const api = `http://localhost:${PORT}/api`;
+
+const app = document.getElementById("app");
+
+function showError(error) {
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "error";
+  
+    errorDiv.textContent = error;
+    const close = document.createElement("button");
+    close.textContent = "X";
+    errorDiv.append(close);
+  
+    close.addEventListener("click", (ev) => errorDiv.remove());
+  
+    app.prepend(errorDiv);
+  }
 
 const login = () => {
     const username = document.getElementById("username-input").value;
     const password = document.getElementById("password-input").value;
 
-    fetch("http://localhost:3000/api/login", {
+    fetch(`${api}/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -68,4 +80,28 @@ const login = () => {
       .catch((error) => {
         showError(error);
       });
-  };
+};
+
+const hide = (element) => {
+    element.setAttribute('hidden', true);
+};
+
+const show = (element) => {
+    element.removeAttribute('hidden');
+};
+
+const setGreeting = (name) => {
+    document.getElementById('greeting').innerHTML = `Logged in as ${name}`;
+};
+
+const loadPoems = (user_name) => {
+    console.log(`Now we can load all the poems for user: ${user_name}`);
+    fetch(`${api}/users/${user_name}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("Get fetch returned: " + data.user_full_name);
+    })
+    .catch((error) => {
+        showError(error);
+    });;
+};

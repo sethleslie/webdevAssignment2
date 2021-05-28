@@ -22,22 +22,6 @@ import {
   const app = new Application();
   const router = new Router();
 
-
- //const username = document.getElementById("username-input").value;
- //const password = document.getElementById("password-input").value;
-
-/*  const username = prompt("Enter User Name");
- const password = prompt("Enter Password"); */
-
-/*  router.post("/api/login", async (context) => {
-  const data = await context.request.body();
-  const value = await data.value;
-  context.response.status = 201;
-  context.response.headers.set("Content-Type", "application/json");
-  context.response.body = value;
-  console.log(value);
-}); */
-
 router.post("/api/login", async (context) => {
 
     if(!context.request.hasBody) {
@@ -47,12 +31,10 @@ router.post("/api/login", async (context) => {
   }
 
   const user = await context.request.body('json').value;
-  console.log(user);
   const password = user.user_pw;
 
 
   if(!user.user_name || !user.user_pw) {
-    console.log("No user info entered");
     context.response.status = 400;
     context.response.body = {"error": "Requires a name or a password"};
     return;
@@ -61,20 +43,14 @@ router.post("/api/login", async (context) => {
   const results = await client.queryObject`SELECT
   user_name, user_full_name, user_pw
   FROM pzusers WHERE user_name=${user.user_name}`;
-  console.log(results.rows[0]);
-  console.log("Length of row: " + results.rows.length);
 
   if (!results.rows.length) {
     console.log("Not found!");
   } else {
     // We have a user
-    console.log("we're in the else statement");
     context.response.status = 201;
-    console.log("Status is set to: " + context.response.status)
     const db_user = results.rows[0];
-    console.log("db_user name = " + db_user.user_name);
     context.response.body = db_user;
-    console.log("response password: " + context.response.body.user_pw);
     console.log(password);
 
     // Check that the password matches
@@ -94,6 +70,21 @@ router.post("/api/login", async (context) => {
   }
 });
 
+/* Return the user with a given username */
+router.get('/api/users/:user_name', async (context) => {
+  if (context.params.user_name) {
+    const results = await client.queryObject`SELECT 
+    user_name, user_full_name 
+    FROM pzusers WHERE user_name=${context.params.user_name}`;
+    if (!results.rows.length) {
+      context.response.status = 400;
+      context.response.body = {"error": "Username not found"};
+    } else {
+        context.response.body = results.rows[0];
+    }
+  }
+});
+
 
 app.use(router.routes());
 app.use(router.allowedMethods());
@@ -102,10 +93,8 @@ app.use(router.allowedMethods());
 app.use(async (context) => {
   const filePath = context.request.url.pathname;
   const fileWhitelist = ["/index.html", "/js/frontend.js", "/css/styles.css"];
-  console.log(filePath);
 
   if (fileWhitelist.includes(filePath)) {
-    console.log(filePath);
     await send(context, filePath, {
       root: `${Deno.cwd()}/static`,
     });
