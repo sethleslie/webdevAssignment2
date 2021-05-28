@@ -1,19 +1,19 @@
-.topic-delete-btn {
+.poem-delete-btn {
   float: right;
 }
 
-.topic-item {
+.poem-item {
   max-width: 400px;
   margin: 40px;
 }
 
-.topic-item > a {
+.poem-item > a {
   text-decoration: underline;
   color: blue;
 }
 
 #login,
-#add-topic {
+#add-poem {
   width: 500px;
 }
 

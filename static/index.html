@@ -8,13 +8,36 @@
 </head>
 
 <body>
-  <div id="login">
+  <div id="login" hidden>
     <label for="username-input">Username</label>
     <input type="text" id="username-input"></input>
     <label for="user-password">Password</label>
     <input type="password" id="password-input"></input>
     <button onclick="login()">Login</button>
   </div>
+  <!-- Display Error Messages -->
   <div id="app"></div>
+  <!-- Display greeting when user is logged in -->
+  <div>
+    <p id="greeting"></p>
+  </div>
+  <!-- poems template-->
+  <div id="poems" hidden>
+    <h1>Poem Zone Or Something</h1>
+    <button onclick="newPoem()">New Poem</button>
+    <ul id="poem-list"></ul>
+  </div>
+
+  <!-- Add Poem Template -->
+  <div id="add-poem" hidden>
+    <h1>Add a new poem</h1>
+    <label for="add-poem-title">Title</label>
+    <input type="text" id="add-poem-title"></input>
+    <label for="add-poem-post">Post</label>
+    <textarea id="add-poem-post" rows="10" cols="30"></textarea>
+    <button onclick="cancel()">Cancel</button>
+    <button onclick="addPoem()">Post Your Poem</button>
+  </div>
+
 </body>
 </html>

@@ -1,47 +1,21 @@
-/* const login = () => {
-    const userInputValue = document.getElementById('username-input').value;
-    //check is userInputValue exists
-    //ternary operator = condition ? value if true : value if false
-    const user = userInputValue === "" ? "undefined" : userInputValue;
-    //get the json text using the user name from input
-    fetch(`${api}/users/${user}`)
-      .then(response => response.json())
-      .then(data => {
-      //if the user name is in the api, save the name and username to session,
-      //if(!("error" in data)) checks that an error key hasn't been returned
-          if(!("error" in data)) {
-              //save data to session storage
-              sessionStorage.setItem('username', data.username);
-              sessionStorage.setItem('name', data.name);
-              //Hide login and show topics.
-              hide(document.getElementById('login'));
-              show(document.getElementById('topics'));
-              setGreeting(data.name);
-              //retrieve all topics from API
-              getTopics();
-              //add getTopics to the list of functions to be called in the polling service
-              functionsToPoll.push(getTopics);
-          } else {
-            console.log(user);
-            fetch(`${api}/users/`)
-            .then(response => response.json())
-            .then(data => {
-              //List all available users in the API as an alert
-              //my first .reduce()
-              alert(data.reduce(
-                (text, user) => text += `${user.username}\n`,
-                "Not a valid user name. Try:\n"
-              //woo! It worked!
-            ));
-          });
-        };
-      });
-    } */
 const PORT = 3000;
 
 const api = `http://localhost:${PORT}/api`;
 
 const app = document.getElementById("app");
+
+const start = () => {
+    //If this is not a new session, login will be skipped
+    //if (sessionStorage.getItem('username') === null) {
+      show(document.getElementById('login'));
+    //}
+   /*  else {
+      show(document.getElementById('topics'));
+      setGreeting(sessionStorage.getItem("name"));
+      getTopics();
+      functionsToPoll.push(getTopics);
+    } */
+  }
 
 function showError(error) {
     const errorDiv = document.createElement("div");
@@ -90,8 +64,8 @@ const show = (element) => {
     element.removeAttribute('hidden');
 };
 
-const setGreeting = (name) => {
-    document.getElementById('greeting').innerHTML = `Logged in as ${name}`;
+const setGreeting = (fullName) => {
+    document.getElementById('greeting').innerHTML = `Logged in as ${fullName}`;
 };
 
 const loadPoems = (user_name) => {
@@ -99,9 +73,57 @@ const loadPoems = (user_name) => {
     fetch(`${api}/users/${user_name}`)
       .then(response => response.json())
       .then(data => {
-        console.log("Get fetch returned: " + data.user_full_name);
+        sessionStorage.setItem('user_name', data.user_name);
+        sessionStorage.setItem('user_full_name', data.user_full_name);
+        //hide login and show poems
+        hide(document.getElementById('login'));
+        show(document.getElementById('poems'));
+        setGreeting(data.user_full_name);
     })
     .catch((error) => {
         showError(error);
     });;
 };
+
+  // Initialise the application.
+  start();
+
+/* const login = () => {
+    const userInputValue = document.getElementById('username-input').value;
+    //check is userInputValue exists
+    //ternary operator = condition ? value if true : value if false
+    const user = userInputValue === "" ? "undefined" : userInputValue;
+    //get the json text using the user name from input
+    fetch(`${api}/users/${user}`)
+      .then(response => response.json())
+      .then(data => {
+      //if the user name is in the api, save the name and username to session,
+      //if(!("error" in data)) checks that an error key hasn't been returned
+          if(!("error" in data)) {
+              //save data to session storage
+              sessionStorage.setItem('username', data.username);
+              sessionStorage.setItem('name', data.name);
+              //Hide login and show topics.
+              hide(document.getElementById('login'));
+              show(document.getElementById('topics'));
+              setGreeting(data.name);
+              //retrieve all topics from API
+              getTopics();
+              //add getTopics to the list of functions to be called in the polling service
+              functionsToPoll.push(getTopics);
+          } else {
+            console.log(user);
+            fetch(`${api}/users/`)
+            .then(response => response.json())
+            .then(data => {
+              //List all available users in the API as an alert
+              //my first .reduce()
+              alert(data.reduce(
+                (text, user) => text += `${user.username}\n`,
+                "Not a valid user name. Try:\n"
+              //woo! It worked!
+            ));
+          });
+        };
+      });
+    } */
