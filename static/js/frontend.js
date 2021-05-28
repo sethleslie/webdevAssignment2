@@ -79,51 +79,51 @@ const loadPoems = (user_name) => {
         hide(document.getElementById('login'));
         show(document.getElementById('poems'));
         setGreeting(data.user_full_name);
+        getPoems();
+        //add getTopics to the list of functions to be called in the polling service
+        //functionsToPoll.push(getPoems);
     })
     .catch((error) => {
         showError(error);
     });;
 };
 
-  // Initialise the application.
-  start();
-
-/* const login = () => {
-    const userInputValue = document.getElementById('username-input').value;
-    //check is userInputValue exists
-    //ternary operator = condition ? value if true : value if false
-    const user = userInputValue === "" ? "undefined" : userInputValue;
-    //get the json text using the user name from input
-    fetch(`${api}/users/${user}`)
+const getPoems = () => {
+    //get all topics from api
+    fetch(`${api}/poems/`)
       .then(response => response.json())
       .then(data => {
-      //if the user name is in the api, save the name and username to session,
-      //if(!("error" in data)) checks that an error key hasn't been returned
+        //make sure the json is retrieved
           if(!("error" in data)) {
-              //save data to session storage
-              sessionStorage.setItem('username', data.username);
-              sessionStorage.setItem('name', data.name);
-              //Hide login and show topics.
-              hide(document.getElementById('login'));
-              show(document.getElementById('topics'));
-              setGreeting(data.name);
-              //retrieve all topics from API
-              getTopics();
-              //add getTopics to the list of functions to be called in the polling service
-              functionsToPoll.push(getTopics);
-          } else {
-            console.log(user);
-            fetch(`${api}/users/`)
-            .then(response => response.json())
-            .then(data => {
-              //List all available users in the API as an alert
-              //my first .reduce()
-              alert(data.reduce(
-                (text, user) => text += `${user.username}\n`,
-                "Not a valid user name. Try:\n"
-              //woo! It worked!
-            ));
-          });
-        };
+            const poemList = document.getElementById("poem-list");
+            //if poems don't exist in data they need to be removed from the DOM
+            Array.from(poemList.getElementsByTagName("li")).forEach(domPoem => {
+              //.some() checks each item in array against a condition and returns a single boolean
+              const poemExists = data.some(item => `poem-${item.poem_id}` === domPoem.id);
+              if (!poemExists) {
+                domPoem.remove();
+              };
+            });
+            data.forEach(poem => {
+              //check if the poem is already rendered in the DOM
+              //if their id isn't in the data destroy it.
+              if (document.getElementById(`poem-${poem.poem_id}`) === null) {
+                const poemItem = document.createElement('li');
+                poemItem.id = `poem-${poem.poem_id}`;
+                poemItem.className = 'poem-item';
+                poemItem.innerHTML = `<a onclick="getPostsForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name} AVG RATING: ${poem.avg_rating}</a>`;
+                /* if (poem.user_name === sessionStorage.getItem('user_name')) {
+                    poemItem.innerHTML = `<button onclick="deletePoem(${poem.poem_id})" class="poem-delete-btn">Delete</button><a onclick="getPostsForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title }</a>`;
+                } else {
+                  poemItem.innerHTML = `<a onclick="getPostsForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name} AVG RATING: ${poem.avg_rating}</a>`;
+                }; */
+                poemList.appendChild(poemItem);
+              };
+            });
+             
+          };
       });
-    } */
+};
+
+  // Initialise the application.
+  start();

@@ -85,6 +85,21 @@ router.get('/api/users/:user_name', async (context) => {
   }
 });
 
+// Set up a route to listen to /api/poems
+router.get("/api/poems", async (context) => {
+  const results = await client.queryObject
+    `SELECT poems.poem_id, poem_title, poem_body, poems.user_id, pzusers.user_name, CAST(AVG(ratings.poem_rating) AS DECIMAL(2,1)) AS avg_rating
+    FROM poems
+    INNER JOIN pzusers ON poems.user_id=pzusers.user_id
+    INNER JOIN ratings ON poems.poem_id=ratings.poem_id
+    GROUP BY poems.poem_id, pzusers.user_name
+    ORDER BY avg_rating DESC;`;
+
+  context.response.body = results.rows.map(data => (
+      {...data, _url: `/api/poems/${data.poem_id}`}    // this is the "spread" operator
+  ));
+});
+
 
 app.use(router.routes());
 app.use(router.allowedMethods());
