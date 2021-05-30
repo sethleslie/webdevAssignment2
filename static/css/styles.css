@@ -12,6 +12,13 @@
   color: blue;
 }
 
+.poem-body {
+  font-style: italic;
+  font-weight: bold;
+  font-size: x-large;
+  
+}
+
 #login,
 #add-poem {
   width: 500px;
