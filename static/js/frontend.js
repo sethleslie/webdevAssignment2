@@ -95,14 +95,7 @@ const getPoems = () => {
         //make sure the json is retrieved
           if(!("error" in data)) {
             const poemList = document.getElementById("poem-list");
-            //if poems don't exist in data they need to be removed from the DOM
-            Array.from(poemList.getElementsByTagName("li")).forEach(domPoem => {
-              //.some() checks each item in array against a condition and returns a single boolean
-              const poemExists = data.some(item => `poem-${item.poem_id}` === domPoem.id);
-              if (!poemExists) {
-                domPoem.remove();
-              };
-            });
+
             data.forEach(poem => {
               //check if the poem is already rendered in the DOM
               //if their id isn't in the data destroy it.
@@ -129,12 +122,12 @@ const getBodyForPoem = (element) => {
       .then(response => response.json())
       .then((data) => {
           let poemBody = document.getElementById(`poem-body-${ element.dataset.id }`);
-          let poemBodyCreated = false;
+          console.log(poemBody);
           if (poemBody === null) {
+              console.log("created new body");
               poemBody = document.createElement('p');
               poemBody.id = `poem-body-${ element.dataset.id }`;
               poemBody.className = "poem-body";
-              poemBodyCreated = true;
               poemBody.innerHTML = `<p>${ data[0].poem_body}</p>`
           }
 
@@ -143,6 +136,7 @@ const getBodyForPoem = (element) => {
           let postListCreated = false;
 
           if (postList === null) {
+              console.log("post-list created with ig: " + `post-list-${ element.dataset.id}`);
             postList = document.createElement('ul');
             postList.id = `post-list-${ element.dataset.id }`;
             // This is used to know if we ended up creating a new post list.
@@ -155,6 +149,7 @@ const getBodyForPoem = (element) => {
           data.slice(numberOfOldItems).reduce(
               (list, poem) => {
                   const poemItem = document.createElement('li');
+                  poemItem.id = poem.comment_id;
                   poemItem.innerHTML = `<p>${ poem.comment_text} <br>--${poem.user_name}</p>`;
                   list.appendChild(poemItem);
                   return list;
@@ -202,8 +197,10 @@ const addPost = (id, newPostInput) => {
 
     // Optimistically try and add a new post
     const postItem = document.createElement('li');
+    postItem.id = 100000000;
     postItem.innerHTML = `<p>${newPostInput.value} <br>--${ sessionStorage.getItem('user_name') }</p>`;
     document.getElementById(`post-list-${ id }`).appendChild(postItem);
+    console.log(postItem.id);
 
     fetch(`${api}/poems/${id}/posts`, {
         method: 'POST',
@@ -212,11 +209,11 @@ const addPost = (id, newPostInput) => {
         },
         body: JSON.stringify(newPost)
       })
-      .then((res) => {
-        if (res.status !== 201) {
-          throw `Couldn't insert post!`;
-        }
+      .then(response => response.json())
+      .then((data) => {
         newPostInput.value = '';
+        postItem.id = data.comment_id;
+        console.log("new postItem.id" + postItem.id);
       })
       .catch((error) => {
         showError(error);

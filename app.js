@@ -88,14 +88,15 @@ router.post('/api/poems/:poem_id/posts', async (context) => {
   VALUES ( ${user.text}, ${user.user_id}, ${context.params.poem_id}) 
   RETURNING (comment_id)`;
 
+  console.log(insertResults.rows[0])
   if(insertResults.rowCount === 0) {
     context.response.status = 400;
     context.response.body = {"error": "Error inserting comment"};
     return;
-  }
-
-  context.response.status = 201;
-
+  } else {
+    context.response.status = 201;
+    context.response.body = insertResults.rows[0];  
+  };
 });
 
 /* Return the user with a given username */
@@ -116,7 +117,7 @@ router.get('/api/users/:user_name', async (context) => {
 router.get('/api/poems/:poem_id/body', async (context) => {
   if (context.params.poem_id) {
     const results = await client.queryObject`SELECT 
-    poems.poem_id, poems.poem_body, poemcomments.comment_text, pzusers.user_name
+    poems.poem_id, poems.poem_body, poemcomments.comment_text, poemcomments.comment_id, pzusers.user_name
     FROM poems
     INNER JOIN poemcomments ON poems.poem_id=poemcomments.poem_id
     INNER JOIN pzusers ON poemcomments.user_id=pzusers.user_id
