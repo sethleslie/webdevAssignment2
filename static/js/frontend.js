@@ -67,6 +67,58 @@ const setGreeting = (fullName) => {
     document.getElementById('greeting').innerHTML = `Logged in as ${fullName}`;
 };
 
+const signUp = () => {
+    hide(document.getElementById('login'));
+    show(document.getElementById('sign-up'));
+};
+
+const cancel = () => {
+    hide(document.getElementById('sign-up'));
+    show(document.getElementById('login'));
+};
+
+const addUser = () => {
+    //check for value in input fields
+    if((document.getElementById('sign-up-user-name').value !== "")
+        &&(document.getElementById('sign-up-full-name').value !== "")
+        &&(document.getElementById('sign-up-password').value !== ""))
+    { 
+        const newUser = {
+        user_name: document.getElementById('sign-up-user-name').value,
+        user_full_name: document.getElementById('sign-up-full-name').value,
+        user_pw: document.getElementById('sign-up-password').value
+    }
+
+    fetch(`${api}/newUser/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newUser),
+    })
+    //None of this is working!!!
+    .then((data) => {
+        console.log(data.status);
+        if (data.status !== 201) {
+            throw `User Name already exists. Please choose another user name.`
+        }
+        return data;
+    })
+    .then(data => data.json())
+    .then((data) => {
+        console.log(`User with ID: ${data.user_id} inserted successfully! Now what?`)
+    })
+    .catch((error) => {
+        showError(error);
+        document.getElementById('sign-up-user-name').value = "";
+        document.getElementById('sign-up-full-name').value = "";
+        document.getElementById('sign-up-password').value = "";
+    });
+    } else {
+        showError("Please complete all fields before continuing.");
+    }
+};
+
 const loadPoems = (user_name) => {
     fetch(`${api}/users/${user_name}`)
       .then(response => response.json())
@@ -84,7 +136,7 @@ const loadPoems = (user_name) => {
     })
     .catch((error) => {
         showError(error);
-    });;
+    });
 };
 
 const getPoems = () => {
@@ -122,9 +174,7 @@ const getBodyForPoem = (element) => {
       .then(response => response.json())
       .then((data) => {
           let poemBody = document.getElementById(`poem-body-${ element.dataset.id }`);
-          console.log(poemBody);
           if (poemBody === null) {
-              console.log("created new body");
               poemBody = document.createElement('p');
               poemBody.id = `poem-body-${ element.dataset.id }`;
               poemBody.className = "poem-body";
@@ -136,7 +186,6 @@ const getBodyForPoem = (element) => {
           let postListCreated = false;
 
           if (postList === null) {
-              console.log("post-list created with ig: " + `post-list-${ element.dataset.id}`);
             postList = document.createElement('ul');
             postList.id = `post-list-${ element.dataset.id }`;
             // This is used to know if we ended up creating a new post list.

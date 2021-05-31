@@ -22,6 +22,52 @@ import {
   const app = new Application();
   const router = new Router();
 
+router.post("/api/newUser", async (context) => {
+
+  if(!context.request.hasBody) {
+    context.response.status = 400;
+    context.response.body = {"error": "Expected a JSON object body"};
+    return;
+  }
+
+  const newUser = await context.request.body('json').value;
+
+  const userCheck = await client.queryObject`SELECT
+  user_name, user_full_name, user_pw
+  FROM pzusers WHERE user_name=${newUser.user_name}`;
+
+  if(userCheck.rowCount !== 0){
+    context.response.status = 400;
+    context.response.body = {"error": "User already exists!"};
+    return;
+    }
+
+  let hashedpword = sodium.crypto_pwhash_str(newUser.user_pw,
+  sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+  sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE);
+  console.log(newUser.user_pw);
+  console.log(hashedpword);
+  context.response.status = 201;
+  console.log(context.response.status);
+  
+  const insertUser = await client.queryObject`INSERT INTO PZUSERS 
+  (user_name, user_full_name, user_pw) 
+  VALUES ( ${newUser.user_name}, ${newUser.user_full_name}, ${hashedpword}) 
+  RETURNING (user_id)`;
+
+  if(insertUser.rowCount === 0) {
+    context.response.status = 400;
+    context.response.body = {"error": "Error inserting new user"};
+    return;
+  } else {
+    console.log("we're in the else!")
+    console.log("The status " + context.response.status);
+    context.response.status = 201;
+    const thisUser = insertUser.rows[0];
+    context.response.body = thisUser;  
+  }; 
+})
+
 router.post("/api/login", async (context) => {
 
     if(!context.request.hasBody) {
@@ -88,7 +134,6 @@ router.post('/api/poems/:poem_id/posts', async (context) => {
   VALUES ( ${user.text}, ${user.user_id}, ${context.params.poem_id}) 
   RETURNING (comment_id)`;
 
-  console.log(insertResults.rows[0])
   if(insertResults.rowCount === 0) {
     context.response.status = 400;
     context.response.body = {"error": "Error inserting comment"};

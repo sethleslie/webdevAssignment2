@@ -9,11 +9,13 @@
 
 <body>
   <div id="login" hidden>
+    <h1>Poem Zone Or Something<br>Login</h1>
     <label for="username-input">Username</label>
     <input type="text" id="username-input"></input>
     <label for="user-password">Password</label>
     <input type="password" id="password-input"></input>
     <button onclick="login()">Login</button>
+    <button onclick="signUp()">Become A Member</button>
   </div>
   <!-- Display Error Messages -->
   <div id="app"></div>
@@ -26,6 +28,19 @@
     <h1>Poem Zone Or Something</h1>
     <button onclick="newPoem()">New Poem</button>
     <ul id="poem-list"></ul>
+  </div>
+
+  <!-- Become a member template-->
+  <div id="sign-up" hidden>
+    <h1>Become A Member</h1>
+    <label for="sign-up-user-name">User Name</label>
+    <input type="text" id="sign-up-user-name"></input>
+    <label for="sign-up-full-name">Full Name</label>
+    <input type="text" id="sign-up-full-name"></input>
+    <label for="sign-up-password">New Password</label>
+    <input type="password" id="sign-up-password"></input>
+    <button onclick="cancel()">Cancel</button>
+    <button onclick="addUser()">Sign Up</button>
   </div>
 
   <!-- Add Poem Template -->
