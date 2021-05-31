@@ -22,6 +22,40 @@ import {
   const app = new Application();
   const router = new Router();
 
+router.post("/api/newPoem", async (context) => {
+  
+  if(!context.request.hasBody) {
+    context.response.status = 400;
+    context.response.body = {"error": "Expected a JSON object body"};
+    return;
+  }
+
+  const newPoem = await context.request.body('json').value;
+  const insertNewPoem = await client.queryObject`INSERT INTO POEMS
+  (poem_title, poem_body, user_id)
+  VALUES ( ${newPoem.poem_title}, ${newPoem.poem_body}, ${newPoem.user_id})
+  RETURNING (poem_id)`;
+
+  if(insertNewPoem.rowCount === 0) {
+    context.response.status = 400;
+    context.response.body = {"error": "Error inserting new poem"};
+    return;
+  } else {
+    context.response.status = 201;
+    const thisPoem = insertNewPoem.rows[0];
+    context.response.body = thisPoem;
+
+    await client.queryObject`INSERT INTO RATINGS
+    (user_id, poem_id, poem_rating)
+    VALUES ( ${newPoem.user_id}, ${thisPoem.poem_id}, 0)`;
+
+    await client.queryObject`INSERT INTO POEMCOMMENTS
+    (comment_text, user_id, poem_id)
+    VALUES ( 'My new poem', ${newPoem.user_id}, ${thisPoem.poem_id})`;
+  }; 
+
+})
+
 router.post("/api/newUser", async (context) => {
 
   if(!context.request.hasBody) {
@@ -45,10 +79,6 @@ router.post("/api/newUser", async (context) => {
   let hashedpword = sodium.crypto_pwhash_str(newUser.user_pw,
   sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
   sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE);
-  console.log(newUser.user_pw);
-  console.log(hashedpword);
-  context.response.status = 201;
-  console.log(context.response.status);
   
   const insertUser = await client.queryObject`INSERT INTO PZUSERS 
   (user_name, user_full_name, user_pw) 
@@ -60,8 +90,6 @@ router.post("/api/newUser", async (context) => {
     context.response.body = {"error": "Error inserting new user"};
     return;
   } else {
-    console.log("we're in the else!")
-    console.log("The status " + context.response.status);
     context.response.status = 201;
     const thisUser = insertUser.rows[0];
     context.response.body = thisUser;  
@@ -106,7 +134,7 @@ router.post("/api/login", async (context) => {
 
     if (!matches) {
       context.response.status = 400;
-      context.response.body = {"error": "Requires a name or a password"};
+      context.response.body = {"error": "Password incorrect!"};
     return;
     } else {
       console.log(`Password matches! Welcome ${db_user.user_full_name}`);

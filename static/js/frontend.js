@@ -72,10 +72,15 @@ const signUp = () => {
     show(document.getElementById('sign-up'));
 };
 
-const cancel = () => {
+const cancelSignUp = () => {
     hide(document.getElementById('sign-up'));
     show(document.getElementById('login'));
 };
+
+const cancelAddPoem = () => {
+    hide(document.getElementById('add-poem'));
+    show(document.getElementById('poems'));
+}
 
 const addUser = () => {
     //check for value in input fields
@@ -96,9 +101,7 @@ const addUser = () => {
         },
         body: JSON.stringify(newUser),
     })
-    //None of this is working!!!
     .then((data) => {
-        console.log(data.status);
         if (data.status !== 201) {
             throw `User Name already exists. Please choose another user name.`
         }
@@ -106,7 +109,12 @@ const addUser = () => {
     })
     .then(data => data.json())
     .then((data) => {
-        console.log(`User with ID: ${data.user_id} inserted successfully! Now what?`)
+        alert("Sign up SUCCESSFULL!");
+        hide(document.getElementById('sign-up'));
+        sessionStorage.setItem('user_name', newUser.user_name);
+        sessionStorage.setItem('user_full_name', newUser.user_full_name);
+        sessionStorage.setItem('user_id', data.user_id);
+        start();
     })
     .catch((error) => {
         showError(error);
@@ -237,6 +245,57 @@ const getBodyForPoem = (element) => {
       });
 };
 
+const newPoem = () => {
+    hide(document.getElementById('poems'));
+    show(document.getElementById('add-poem'));
+};
+
+const addPoem = () => {
+        //check for value in input fields
+        if((document.getElementById('add-poem-title').value !== "")
+        &&(document.getElementById('add-poem-text').value !== ""))
+    { 
+        const newPoem = {
+        poem_title: document.getElementById('add-poem-title').value,
+        poem_body: document.getElementById('add-poem-text').value,
+        user_id: sessionStorage.getItem('user_id'),
+        }
+
+        //Optimistically add poem when the form is submitted.
+        const poemItem = document.createElement('li');
+        poemItem.className = 'poem-item';
+        poemItem.innerHTML = `<a>${ newPoem.poem_title }</a>`
+        document.getElementById('poem-list').appendChild(poemItem);
+
+        fetch(`${api}/newPoem/`, {
+         method: 'POST',
+         headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newPoem),
+        })
+        .then((data) => {
+           if (data.status !== 201) {
+            throw `Something went wrong posting your poem.`
+           }
+          return data;
+        })
+        .then(data => data.json())
+        .then((data) => {
+            poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ data.poem_id }">${ newPoem.poem_title } by ${ newPoem.user_name} AVG RATING: 0.0</a>`
+            poemItem.id = `poem-${data.poem_id}`;
+            alert(`Poem ${newPoem.poem_title} post SUCCESSFULL!`);
+            hide(document.getElementById('add-poem'));
+            start();
+        })
+        .catch((error) => {
+        showError(error);
+    });
+    } else {
+        showError("Please complete all fields before continuing.");
+    }
+};
+
 const addPost = (id, newPostInput) => {
     const newPost = {
         user_name: sessionStorage.getItem('user_name'),
@@ -246,10 +305,8 @@ const addPost = (id, newPostInput) => {
 
     // Optimistically try and add a new post
     const postItem = document.createElement('li');
-    postItem.id = 100000000;
     postItem.innerHTML = `<p>${newPostInput.value} <br>--${ sessionStorage.getItem('user_name') }</p>`;
     document.getElementById(`post-list-${ id }`).appendChild(postItem);
-    console.log(postItem.id);
 
     fetch(`${api}/poems/${id}/posts`, {
         method: 'POST',
@@ -262,7 +319,6 @@ const addPost = (id, newPostInput) => {
       .then((data) => {
         newPostInput.value = '';
         postItem.id = data.comment_id;
-        console.log("new postItem.id" + postItem.id);
       })
       .catch((error) => {
         showError(error);
