@@ -1,4 +1,4 @@
-.poem-delete-btn {
+.poem-rate-btn {
   float: right;
 }
 
@@ -15,14 +15,34 @@
 .poem-body {
   font-style: italic;
   font-weight: bold;
+  font-size: x-large; 
+}
+
+#poem-title {
+  text-decoration: underline;
+  font-weight: bold;
   font-size: x-large;
-  
+}
+
+#greeting {
+  font-weight: bold;
+}
+
+input:invalid+span:after {
+  content: '✖';
+  padding-left: 10px;
+}
+
+input:valid+span:after {
+  content: '✓';
+  padding-left: 10px;
 }
 
 #login,
 #add-poem,
-#sign-up {
-  width: 500px;
+#sign-up,
+#rate-poem {
+  width: 600px;
 }
 
 input[type="text"], [type="password"],

@@ -54,5 +54,17 @@
     <button onclick="addPoem()">Post Your Poem</button>
   </div>
 
+  <!-- Rate Poem Template -->
+    <div id="rate-poem" hidden>
+      <h1>Rate this poem:</h1>
+      <p id="poem-title"></p>
+      <label for="rate-this-poem">Rating 0 to 5</label>
+      <input type="number" id="rate-this-poem" min="0" max="5" value="0" required></input>
+      <span class='validity'></span>
+      <br>
+      <button onclick="cancelRatePoem()">Cancel</button>
+      <button onclick="saveRating(document.getElementById('rate-this-poem').value)">Save Rating</button>
+    </div>
+
 </body>
 </html>

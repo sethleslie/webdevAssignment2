@@ -10,7 +10,7 @@ const start = () => {
       show(document.getElementById('login'));
     } else {
       show(document.getElementById('poems'));
-      setGreeting(sessionStorage.getItem("user_full_name"));
+      setGreeting(sessionStorage.getItem('user_full_name'));
       getPoems();
       functionsToPoll.push(getPoems);
     }
@@ -80,7 +80,12 @@ const cancelSignUp = () => {
 const cancelAddPoem = () => {
     hide(document.getElementById('add-poem'));
     show(document.getElementById('poems'));
-}
+};
+
+const cancelRatePoem = () => {
+    hide(document.getElementById('rate-poem'));
+    show(document.getElementById('poems'));
+};
 
 const addUser = () => {
     //check for value in input fields
@@ -160,21 +165,73 @@ const getPoems = () => {
               //check if the poem is already rendered in the DOM
               //if their id isn't in the data destroy it.
               if (document.getElementById(`poem-${poem.poem_id}`) === null) {
+                const poemRating = document.createElement('p');
+                poemRating.id = `avg-rating-${poem.poem_id}`;
+                if (poem.avg_rating === null) {
+                    poemRating.innerHTML = 'Poem not yet rated.'
+                } else {
+                    poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
+                };
                 const poemItem = document.createElement('li');
                 poemItem.id = `poem-${poem.poem_id}`;
                 poemItem.className = 'poem-item';
-                poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name} AVG RATING: ${poem.avg_rating}</a>`;
-                /* if (poem.user_name === sessionStorage.getItem('user_name')) {
-                    poemItem.innerHTML = `<button onclick="deletePoem(${poem.poem_id})" class="poem-delete-btn">Delete</button><a onclick="getPostsForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title }</a>`;
-                } else {
-                  poemItem.innerHTML = `<a onclick="getPostsForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name} AVG RATING: ${poem.avg_rating}</a>`;
-                }; */
+                poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name}</a>`;
+                if (poem.user_name !== sessionStorage.getItem('user_name')) {
+                    poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name}</a><button onclick="ratePoem(this)" data-id="${poem.poem_id}" data-title="${poem.poem_title}" class="poem-rate-btn">Rate</button>`;
+                };
+                poemItem.appendChild(poemRating);
                 poemList.appendChild(poemItem);
-              };
+                };
             });
-             
-          };
-      });
+        };
+    });
+};
+
+const ratePoem = (element) => {
+    console.log(`You wanna rate poem: ${element.dataset.id} ${element.dataset.title}`);
+    fetch(`${api}/poems/${element.dataset.id}/rating/${sessionStorage.getItem('user_id')}`)
+        .then((data) => {
+            if (data.status === 400) {
+                showError("You've already rated this poem");
+                //alert("You've already rated this poem")
+            } else {
+                hide(document.getElementById('poems'));
+                show(document.getElementById('rate-poem'));
+                sessionStorage.setItem('poem_id', element.dataset.id);
+                document.getElementById('poem-title').innerHTML = element.dataset.title;
+            }
+        })
+};
+
+const saveRating = (rating) => {
+    const newRating = {
+        user_id: sessionStorage.getItem('user_id'),
+        poem_id: sessionStorage.getItem('poem_id'),
+        poem_rating: rating
+    }
+    sessionStorage.removeItem('poem_id');
+    fetch(`${api}/poems/newRating`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newRating),
+        })
+        .then((data) => {
+            if (data.status !== 201) {
+                throw `Poem rating unsuccessful.`
+            }
+            return data;
+        })
+        .then(data => data.json())
+        .then((data) => {
+            alert(`Woo! You gave the poem ${data.poem_rating} out of 5!`);
+            hide(document.getElementById('rate-poem'));
+            start();
+        })
+        .catch((error) => {
+            showError(error);
+        });
 };
 
 const getBodyForPoem = (element) => {

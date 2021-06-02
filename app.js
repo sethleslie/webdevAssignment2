@@ -56,6 +56,30 @@ router.post("/api/newPoem", async (context) => {
 
 })
 
+router.post("/api/poems/newRating", async (context) => {
+  if(!context.request.hasBody) {
+    context.response.status = 400;
+    context.response.body = {"error": "Expected a JSON object body"};
+    return;
+  }
+
+  const newRating = await context.request.body('json').value;
+  const insertNewRating = await client.queryObject`INSERT INTO RATINGS
+  (user_id, poem_id, poem_rating)
+  VALUES ( ${newRating.user_id}, ${newRating.poem_id}, ${newRating.poem_rating})
+  RETURNING (poem_rating)`;
+
+  if(insertNewRating.rowCount === 0) {
+    context.response.status = 400;
+    context.response.body = {"error": "Error inserting new rating"};
+    return;
+  } else {
+    context.response.status = 201;
+    const thisRating = insertNewRating.rows[0];
+    context.response.body = thisRating;
+  }
+});
+
 router.post("/api/newUser", async (context) => {
 
   if(!context.request.hasBody) {
@@ -172,6 +196,21 @@ router.post('/api/poems/:poem_id/posts', async (context) => {
   };
 });
 
+router.get('/api/poems/:poem_id/rating/:user_id', async (context) => {
+  console.log();
+  if (context.params.poem_id && context.params.user_id) {
+    const result = await client.queryObject`SELECT * FROM
+    RATINGS
+    WHERE user_id = ${context.params.user_id} AND poem_id = ${context.params.poem_id}`;
+    if (result.rows.length > 0) {
+      context.response.status = 400;
+      return;
+    } else {
+      context.response.status = 201;
+    }
+  }
+})
+
 /* Return the user with a given username */
 router.get('/api/users/:user_name', async (context) => {
   if (context.params.user_name) {
@@ -211,7 +250,7 @@ router.get('/api/poems/:poem_id/body', async (context) => {
 // Set up a route to listen to /api/poems
 router.get("/api/poems", async (context) => {
   const results = await client.queryObject`SELECT 
-  poems.poem_id, poem_title, poem_body, poems.user_id, pzusers.user_name, CAST(AVG(ratings.poem_rating) AS DECIMAL(2,1)) AS avg_rating
+  poems.poem_id, poem_title, poem_body, poems.user_id, pzusers.user_name, CAST(AVG(NULLIF(ratings.poem_rating, 0)) AS DECIMAL(2,1)) AS avg_rating
   FROM poems
   INNER JOIN pzusers ON poems.user_id=pzusers.user_id
   INNER JOIN ratings ON poems.poem_id=ratings.poem_id
