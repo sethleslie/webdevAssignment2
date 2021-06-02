@@ -345,11 +345,11 @@ const addPoem = () => {
         })
         .then(data => data.json())
         .then((data) => {
+            poemItem.id = `poem-${data.poem_id}`;
             poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ data.poem_id }">${ newPoem.poem_title } by ${ newPoem.user_name}</a>`
             const poemRating = document.createElement('p');
             poemRating.id = `avg-rating-${data.poem_id}`;
             poemRating.innerHTML = 'Poem not yet rated.'
-            poemItem.id = `poem-${data.poem_id}`;
             poemItem.appendChild(poemRating);
             alert(`Poem ${newPoem.poem_title} post SUCCESSFULL!`);
             hide(document.getElementById('add-poem'));
