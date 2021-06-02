@@ -2,6 +2,12 @@
   float: right;
 }
 
+#hide-button {
+  float: right;
+  text-decoration: underline;
+  color: blue;
+}
+
 .poem-item {
   max-width: 400px;
   margin: 40px;

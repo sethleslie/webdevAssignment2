@@ -267,10 +267,10 @@ const getBodyForPoem = (element) => {
           //only add new items to the list using slice and number of old items
           data.slice(numberOfOldItems).reduce(
               (list, poem) => {
-                  const poemItem = document.createElement('li');
-                  poemItem.id = poem.comment_id;
-                  poemItem.innerHTML = `<p>${ poem.comment_text} <br>--${poem.user_name}</p>`;
-                  list.appendChild(poemItem);
+                  const postItem = document.createElement('li');
+                  postItem.id = `post-item-${poem.comment_id}`;
+                  postItem.innerHTML = `<a onclick="hideComment(this)" data-id="${ poem.comment_id }" id="hide-button">hide</a><p>${ poem.comment_text} <br>--${poem.user_name}</p>`;
+                  list.appendChild(postItem);
                   return list;
               },
               postList
@@ -305,6 +305,35 @@ const getBodyForPoem = (element) => {
             functionsToPoll.push(getBodyForPoemSpecific);
           };
       });
+};
+
+const hideComment = (element) => {
+    /* Optimistically remove the item from the DOM. This was a method shown to me by Asher Leslie
+      Essentially, update the UI so the user thinks it happened instantly, THEN try to remove it from the database,
+      and if it fails to remove, put it back */
+    const thisComment = document.getElementById(`post-item-${element.dataset.id}`);
+    hide(thisComment);
+    fetch(`${api}/deleteComment/${element.dataset.id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: null
+      })
+      // Success, remove the item permanently.
+      .then((data) => {
+        if (data.status !== 201) {
+            throw `Something went wrong deleting the comment.`
+        } else {
+          thisComment.remove()
+          getPoems();
+        };
+      })
+      // Fail, restore the removed item.
+      .catch((error) => {
+          showError(error);
+          show(thisComment);
+      })
 };
 
 const newPoem = () => {
@@ -371,11 +400,6 @@ const addPost = (id, newPostInput) => {
         text: newPostInput.value
     };
 
-    // Optimistically try and add a new post
-    const postItem = document.createElement('li');
-    postItem.innerHTML = `<p>${newPostInput.value} <br>--${ sessionStorage.getItem('user_name') }</p>`;
-    document.getElementById(`post-list-${ id }`).appendChild(postItem);
-
     fetch(`${api}/poems/${id}/posts`, {
         method: 'POST',
         headers: {
@@ -385,8 +409,11 @@ const addPost = (id, newPostInput) => {
       })
       .then(response => response.json())
       .then((data) => {
+        const postItem = document.createElement('li');
+        postItem.innerHTML = `<a onclick="hideComment(this)" data-id="${ data.comment_id }" id="hide-button">hide</a><p>${newPostInput.value} <br>--${ sessionStorage.getItem('user_name') }</p>`;
+        document.getElementById(`post-list-${ id }`).appendChild(postItem);
         newPostInput.value = '';
-        postItem.id = data.comment_id;
+        postItem.id = `post-item-${data.comment_id}`;
       })
       .catch((error) => {
         showError(error);

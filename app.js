@@ -262,6 +262,23 @@ router.get("/api/poems", async (context) => {
   ));
 });
 
+router.delete("/api/deleteComment/:comment_id", async (context) => {
+  if(context.params.comment_id) {
+
+    const deleteComment = await client.queryObject`DELETE FROM
+    POEMCOMMENTS
+    WHERE comment_id = ${context.params.comment_id}
+    RETURNING comment_id`;
+    //Why does this comparison return false?
+    if(deleteComment.rows[0].comment_id === context.params.comment_id) {
+      context.response.status = 400
+      context.response.body = {"error": "comment not deleted"};
+      return;
+    } else {
+      context.response.status = 201;
+    }
+  }
+})
 
 app.use(router.routes());
 app.use(router.allowedMethods());
