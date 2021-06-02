@@ -33,7 +33,6 @@ function showError(error) {
 const login = () => {
     const username = document.getElementById("username-input").value;
     const password = document.getElementById("password-input").value;
-
     fetch(`${api}/login`, {
         method: "POST",
         headers: {
@@ -114,12 +113,10 @@ const addUser = () => {
     })
     .then(data => data.json())
     .then((data) => {
-        alert("Sign up SUCCESSFULL!");
+        alert("Sign up SUCCESSFULL! Please login!");
         hide(document.getElementById('sign-up'));
-        sessionStorage.setItem('user_name', newUser.user_name);
-        sessionStorage.setItem('user_full_name', newUser.user_full_name);
-        sessionStorage.setItem('user_id', data.user_id);
-        start();
+        show(document.getElementById('login'));
+        //getPoems();
     })
     .catch((error) => {
         showError(error);
@@ -163,7 +160,6 @@ const getPoems = () => {
 
             data.forEach(poem => {
               //check if the poem is already rendered in the DOM
-              //if their id isn't in the data destroy it.
               if (document.getElementById(`poem-${poem.poem_id}`) === null) {
                 const poemRating = document.createElement('p');
                 poemRating.id = `avg-rating-${poem.poem_id}`;
@@ -175,12 +171,19 @@ const getPoems = () => {
                 const poemItem = document.createElement('li');
                 poemItem.id = `poem-${poem.poem_id}`;
                 poemItem.className = 'poem-item';
-                poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name}</a>`;
+                poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name }</a>`;
                 if (poem.user_name !== sessionStorage.getItem('user_name')) {
-                    poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name}</a><button onclick="ratePoem(this)" data-id="${poem.poem_id}" data-title="${poem.poem_title}" class="poem-rate-btn">Rate</button>`;
+                    poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name }</a><button onclick="ratePoem(this)" data-id="${poem.poem_id}" data-title="${poem.poem_title}" class="poem-rate-btn">Rate</button>`;
                 };
                 poemItem.appendChild(poemRating);
                 poemList.appendChild(poemItem);
+                } else {
+                   const poemRating = document.getElementById(`avg-rating-${poem.poem_id}`);
+                   if (poem.avg_rating === null) {
+                    poemRating.innerHTML = 'Poem not yet rated.'
+                    } else {
+                    poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
+                    };
                 };
             });
         };
@@ -193,14 +196,14 @@ const ratePoem = (element) => {
         .then((data) => {
             if (data.status === 400) {
                 showError("You've already rated this poem");
-                //alert("You've already rated this poem")
             } else {
                 hide(document.getElementById('poems'));
                 show(document.getElementById('rate-poem'));
+                //todo: find a better way to pass the poem_id
                 sessionStorage.setItem('poem_id', element.dataset.id);
                 document.getElementById('poem-title').innerHTML = element.dataset.title;
             }
-        })
+            })
 };
 
 const saveRating = (rating) => {
@@ -210,6 +213,7 @@ const saveRating = (rating) => {
         poem_rating: rating
     }
     sessionStorage.removeItem('poem_id');
+
     fetch(`${api}/poems/newRating`, {
         method: 'POST',
         headers: {
@@ -227,7 +231,8 @@ const saveRating = (rating) => {
         .then((data) => {
             alert(`Woo! You gave the poem ${data.poem_rating} out of 5!`);
             hide(document.getElementById('rate-poem'));
-            start();
+            show(document.getElementById('poems'));
+            getPoems();
         })
         .catch((error) => {
             showError(error);
@@ -316,6 +321,7 @@ const addPoem = () => {
         poem_title: document.getElementById('add-poem-title').value,
         poem_body: document.getElementById('add-poem-text').value,
         user_id: sessionStorage.getItem('user_id'),
+        user_name: sessionStorage.getItem('user_name')
         }
 
         //Optimistically add poem when the form is submitted.
@@ -339,11 +345,16 @@ const addPoem = () => {
         })
         .then(data => data.json())
         .then((data) => {
-            poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ data.poem_id }">${ newPoem.poem_title } by ${ newPoem.user_name} AVG RATING: 0.0</a>`
+            poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ data.poem_id }">${ newPoem.poem_title } by ${ newPoem.user_name}</a>`
+            const poemRating = document.createElement('p');
+            poemRating.id = `avg-rating-${data.poem_id}`;
+            poemRating.innerHTML = 'Poem not yet rated.'
             poemItem.id = `poem-${data.poem_id}`;
+            poemItem.appendChild(poemRating);
             alert(`Poem ${newPoem.poem_title} post SUCCESSFULL!`);
             hide(document.getElementById('add-poem'));
-            start();
+            show(document.getElementById('poems'));
+            getPoems();
         })
         .catch((error) => {
         showError(error);
