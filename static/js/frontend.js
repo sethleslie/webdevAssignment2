@@ -381,7 +381,7 @@ const addPoem = () => {
         poemItem.innerHTML = `<a>${ newPoem.poem_title }</a>`
         document.getElementById('poem-list').appendChild(poemItem);
 
-        fetch(`${api}/newPoem/`, {
+        fetch(`${api}/newPoem`, {
          method: 'POST',
          headers: {
           'Content-Type': 'application/json',
@@ -446,22 +446,28 @@ const addPost = (id, newPostInput) => {
 };
 
 const showFavourites = () => {
+    //hide all poems and then reveal the favourite ones
+    const allPoems = document.getElementsByClassName('poem-item');
+    Array.from(allPoems).forEach((element) => {
+        hide(element);
+    });
+    //then show just the favourites
     const user_id = sessionStorage.getItem('user_id');
-    fetch(`${api}/poems/${user_id}/notFavs`, {
+    fetch(`${api}/poems/${user_id}/favs`, {
         headers: {
             "Authorization": sessionStorage.getItem('jwtkey'),
         }
     })
         .then(response => {
             if(response.status !== 201) {
-                throw "You rate all poems 4 or higher! Be more critical of your peers!"
+                throw "You have no favourites! Be more supportive of your peers!"
             }
             return response;
         })
         .then(response => response.json())
         .then(data => {
             data.forEach(poem => {
-                hide(document.getElementById(`poem-${poem.poem_id}`));
+                show(document.getElementById(`poem-${poem.poem_id}`));
             });
         })
         .catch((error) => {
@@ -469,12 +475,17 @@ const showFavourites = () => {
         });
     hide(document.getElementById('favButton'));
     show(document.getElementById('allButton'));
-    show(document.getElementById('favs'));
+    show(document.getElementById('favsHeader'));
     getPoems();
 };
 
 const showAll = () => {
-    const user_id = sessionStorage.getItem('user_id');
+    //reveal all poems
+    const allPoems = document.getElementsByClassName('poem-item');
+    Array.from(allPoems).forEach((element) => {
+        show(element);
+    });
+/*     const user_id = sessionStorage.getItem('user_id');
     fetch(`${api}/poems/${user_id}/notFavs`, {
         headers: {
             "Authorization": sessionStorage.getItem('jwtkey'),
@@ -494,10 +505,10 @@ const showAll = () => {
         })
         .catch((error) => {
             showError(error);
-        });
+        }); */
     hide(document.getElementById('allButton'));
     show(document.getElementById('favButton'));
-    hide(document.getElementById('favs'));
+    hide(document.getElementById('favsHeader'));
     getPoems();
 };
 

@@ -9,12 +9,12 @@ import {
   import * as djwt from "https://deno.land/x/djwt@v2.2/mod.ts";
   
   const client = new Client({
-    //user: "postgres",
-    user: "assignment2",
+    user: "postgres",
+    // user: "assignment2",
     database: "poemZone",
     hostname: "localhost",
-    // password: "2ur2l3Dov3",
-    password: "Assignment2",
+    password: "2ur2l3Dov3",
+    // password: "Assignment2",
     port: 5432,
   });
 
@@ -156,7 +156,6 @@ router.post("/api/login", async (context) => {
     // We have a user
     context.response.status = 201;
     const db_user = results.rows[0];
-    //context.response.body = db_user;
 
     // Check that the password matches
     const matches = sodium.crypto_pwhash_str_verify(
@@ -172,7 +171,7 @@ router.post("/api/login", async (context) => {
       const jwt = await djwt.create(
         { alg: jwtAlgorithm, typ: "JWT" }, // header. typ is always JWT
         {
-          exp: djwt.getNumericDate(60 * 15), // set it to expire in 15 minutes
+          exp: djwt.getNumericDate(60 * 100), // set it to expire in 15 minutes
           user_id: db_user.user_id,            // any other keys we like
         },
         secretKey,
@@ -281,15 +280,15 @@ router.get("/api/poems", async (context) => {
   ));
 });
 
-router.get("/api/poems/:user_id/notFavs", async (context) => {
+router.get("/api/poems/:user_id/favs", async (context) => {
   if (context.params.user_id) {
   const results = await client.queryObject`SELECT poem_id
   FROM RATINGS
-  WHERE user_id = ${context.params.user_id} AND poem_rating <= 3;`;
+  WHERE user_id = ${context.params.user_id} AND poem_rating >= 4;`;
   if (results.rows.length) {
       context.response.status = 201;
       context.response.body = results.rows.map(data => (
-      {...data, _url: `/api/poems/user_id/notFavs/${data.poem_id}`}    // this is the "spread" operator
+      {...data, _url: `/api/poems/user_id/favs/${data.poem_id}`}    // this is the "spread" operator
       ));
   } else {
     context.response.status = 400;
