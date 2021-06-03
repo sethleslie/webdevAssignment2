@@ -33,6 +33,7 @@ function showError(error) {
 const login = () => {
     const username = document.getElementById("username-input").value;
     const password = document.getElementById("password-input").value;
+
     fetch(`${api}/login`, {
         method: "POST",
         headers: {
@@ -43,10 +44,12 @@ const login = () => {
             user_pw: password,
           }),
     })
-    .then((res) => {
+    .then( async (res) => {
         if (res.status !== 201) {
           throw `Couldn't sign in!`;
         }
+        const data = await res.json();
+        sessionStorage.setItem("jwtkey", data);
         loadPoems(username);
       })
       .catch((error) => {

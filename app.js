@@ -6,12 +6,15 @@ import {
   import { Client } from "https://deno.land/x/postgres/mod.ts";
   import sodium from "https://deno.land/x/sodium/basic.ts";
   import * as log from "https://deno.land/std/log/mod.ts";
+  import * as djwt from "https://deno.land/x/djwt@v2.2/mod.ts";
   
   const client = new Client({
     user: "postgres",
+    //user: "assignment2"
     database: "poemZone",
     hostname: "localhost",
     password: "2ur2l3Dov3",
+    // password: "Assignment2",
     port: 5432,
   });
 
@@ -21,6 +24,10 @@ import {
   
   const app = new Application();
   const router = new Router();
+
+  const secretKey = "44226452948404D635166546A576E";
+  const jwtAlgorithm = "HS256";
+
 
 router.post("/api/newPoem", async (context) => {
   
@@ -35,6 +42,7 @@ router.post("/api/newPoem", async (context) => {
   (poem_title, poem_body, user_id)
   VALUES ( ${newPoem.poem_title}, ${newPoem.poem_body}, ${newPoem.user_id})
   RETURNING (poem_id)`;
+  
 
   if(insertNewPoem.rowCount === 0) {
     context.response.status = 400;
@@ -148,7 +156,7 @@ router.post("/api/login", async (context) => {
     // We have a user
     context.response.status = 201;
     const db_user = results.rows[0];
-    context.response.body = db_user;
+    //context.response.body = db_user;
 
     // Check that the password matches
     const matches = sodium.crypto_pwhash_str_verify(
@@ -159,9 +167,20 @@ router.post("/api/login", async (context) => {
     if (!matches) {
       context.response.status = 400;
       context.response.body = {"error": "Password incorrect!"};
-    return;
     } else {
       console.log(`Password matches! Welcome ${db_user.user_full_name}`);
+      const jwt = await djwt.create(
+        { alg: jwtAlgorithm, typ: "JWT" }, // header. typ is always JWT
+        {
+          exp: djwt.getNumericDate(30), // set it to expire in 30 seconds
+          user_id: db_user.user_id,            // any other keys we like
+        },
+        secretKey,
+      );
+
+      context.response.body = JSON.stringify(jwt);
+      context.response.type = 'json';
+    
     }
   }
 });
