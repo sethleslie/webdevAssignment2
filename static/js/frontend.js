@@ -105,6 +105,7 @@ const addUser = () => {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            "Authorization": sessionStorage.getItem('jwtkey'),
         },
         body: JSON.stringify(newUser),
     })
@@ -133,7 +134,11 @@ const addUser = () => {
 };
 
 const loadPoems = (user_name) => {
-    fetch(`${api}/users/${user_name}`)
+    fetch(`${api}/users/${user_name}`, {
+        headers: {
+            "Authorization": sessionStorage.getItem('jwtkey'),
+        }
+    })
       .then(response => response.json())
       .then(data => {
         sessionStorage.setItem('user_name', data.user_name);
@@ -154,7 +159,11 @@ const loadPoems = (user_name) => {
 
 const getPoems = () => {
     //get all topics from api
-    fetch(`${api}/poems/`)
+    fetch(`${api}/poems/`, {
+        headers: {
+            "Authorization": sessionStorage.getItem('jwtkey'),
+        }
+    })
       .then(response => response.json())
       .then(data => {
         //make sure the json is retrieved
@@ -195,7 +204,11 @@ const getPoems = () => {
 
 const ratePoem = (element) => {
     console.log(`You wanna rate poem: ${element.dataset.id} ${element.dataset.title}`);
-    fetch(`${api}/poems/${element.dataset.id}/rating/${sessionStorage.getItem('user_id')}`)
+    fetch(`${api}/poems/${element.dataset.id}/rating/${sessionStorage.getItem('user_id')}`, {
+        headers: {
+            "Authorization": sessionStorage.getItem('jwtkey'),
+        }
+    })
         .then((data) => {
             if (data.status === 400) {
                 showError("You've already rated this poem");
@@ -221,6 +234,7 @@ const saveRating = (rating) => {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            "Authorization": sessionStorage.getItem('jwtkey'),
         },
         body: JSON.stringify(newRating),
         })
@@ -243,7 +257,11 @@ const saveRating = (rating) => {
 };
 
 const getBodyForPoem = (element) => {
-    fetch(`${api}/poems/${ element.dataset.id }/body`)
+    fetch(`${api}/poems/${ element.dataset.id }/body`, {
+        headers: {
+            "Authorization": sessionStorage.getItem('jwtkey'),
+        }
+    })
       .then(response => response.json())
       .then((data) => {
           let poemBody = document.getElementById(`poem-body-${ element.dataset.id }`);
@@ -320,6 +338,7 @@ const hideComment = (element) => {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
+            "Authorization": sessionStorage.getItem('jwtkey'),
         },
         body: null
       })
@@ -366,6 +385,7 @@ const addPoem = () => {
          method: 'POST',
          headers: {
           'Content-Type': 'application/json',
+          "Authorization": sessionStorage.getItem('jwtkey'),
         },
         body: JSON.stringify(newPoem),
         })
@@ -407,6 +427,7 @@ const addPost = (id, newPostInput) => {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            "Authorization": sessionStorage.getItem('jwtkey'),
         },
         body: JSON.stringify(newPost)
       })
@@ -426,7 +447,11 @@ const addPost = (id, newPostInput) => {
 
 const showFavourites = () => {
     const user_id = sessionStorage.getItem('user_id');
-    fetch(`${api}/poems/${user_id}/notFavs`)
+    fetch(`${api}/poems/${user_id}/notFavs`, {
+        headers: {
+            "Authorization": sessionStorage.getItem('jwtkey'),
+        }
+    })
         .then(response => {
             if(response.status !== 201) {
                 throw "You rate all poems 4 or higher! Be more critical of your peers!"
@@ -450,7 +475,11 @@ const showFavourites = () => {
 
 const showAll = () => {
     const user_id = sessionStorage.getItem('user_id');
-    fetch(`${api}/poems/${user_id}/notFavs`)
+    fetch(`${api}/poems/${user_id}/notFavs`, {
+        headers: {
+            "Authorization": sessionStorage.getItem('jwtkey'),
+        }
+    })
         .then(response => {
             if(response.status !== 201) {
                 throw "No favourites"

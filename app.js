@@ -172,7 +172,7 @@ router.post("/api/login", async (context) => {
       const jwt = await djwt.create(
         { alg: jwtAlgorithm, typ: "JWT" }, // header. typ is always JWT
         {
-          exp: djwt.getNumericDate(30), // set it to expire in 30 seconds
+          exp: djwt.getNumericDate(60 * 15), // set it to expire in 15 minutes
           user_id: db_user.user_id,            // any other keys we like
         },
         secretKey,
