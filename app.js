@@ -9,12 +9,12 @@ import {
   import * as djwt from "https://deno.land/x/djwt@v2.2/mod.ts";
   
   const client = new Client({
-    user: "postgres",
-    //user: "assignment2"
+    //user: "postgres",
+    user: "assignment2",
     database: "poemZone",
     hostname: "localhost",
-    password: "2ur2l3Dov3",
-    // password: "Assignment2",
+    // password: "2ur2l3Dov3",
+    password: "Assignment2",
     port: 5432,
   });
 
@@ -129,7 +129,7 @@ router.post("/api/newUser", async (context) => {
 })
 
 router.post("/api/login", async (context) => {
-
+    console.log("We're in api/login!");
     if(!context.request.hasBody) {
     context.response.status = 400;
     context.response.body = {"error": "Expected a JSON object body"};
@@ -273,7 +273,8 @@ router.get("/api/poems", async (context) => {
   FROM poems
   INNER JOIN pzusers ON poems.user_id=pzusers.user_id
   INNER JOIN ratings ON poems.poem_id=ratings.poem_id
-  GROUP BY poems.poem_id, pzusers.user_name;`;
+  GROUP BY poems.poem_id, pzusers.user_name
+  ORDER BY poem_id;`;
 
   context.response.body = results.rows.map(data => (
       {...data, _url: `/api/poems/${data.poem_id}`}    // this is the "spread" operator
@@ -330,7 +331,8 @@ app.use(async (context, next) => {
 });
 
 app.use(async (context, next) => {
-  if(context.request.url.pathname === '/api/login') {
+  console.log(context.request.url.pathname);
+  if(['/api/login','/api/newUser'].includes(context.request.url.pathname)){
     await next();
     return;
   }

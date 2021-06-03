@@ -101,7 +101,7 @@ const addUser = () => {
         user_pw: document.getElementById('sign-up-password').value
     }
 
-    fetch(`${api}/newUser/`, {
+    fetch(`${api}/newUser`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
