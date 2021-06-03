@@ -254,8 +254,7 @@ router.get("/api/poems", async (context) => {
   FROM poems
   INNER JOIN pzusers ON poems.user_id=pzusers.user_id
   INNER JOIN ratings ON poems.poem_id=ratings.poem_id
-  GROUP BY poems.poem_id, pzusers.user_name
-  ORDER BY avg_rating DESC;`;
+  GROUP BY poems.poem_id, pzusers.user_name;`;
 
   context.response.body = results.rows.map(data => (
       {...data, _url: `/api/poems/${data.poem_id}`}    // this is the "spread" operator
@@ -264,12 +263,9 @@ router.get("/api/poems", async (context) => {
 
 router.get("/api/poems/:user_id/notFavs", async (context) => {
   if (context.params.user_id) {
-    console.log("we're in the api");
   const results = await client.queryObject`SELECT poem_id
   FROM RATINGS
   WHERE user_id = ${context.params.user_id} AND poem_rating <= 3;`;
-  console.log("We passed the query");
-  console.log(`results length = ${results.rows.length}`)
   if (results.rows.length) {
       context.response.status = 201;
       context.response.body = results.rows.map(data => (

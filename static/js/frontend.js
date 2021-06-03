@@ -426,7 +426,7 @@ const showFavourites = () => {
     fetch(`${api}/poems/${user_id}/notFavs`)
         .then(response => {
             if(response.status !== 201) {
-                throw "No favourites"
+                throw "You rate all poems 4 or higher! Be more critical of your peers!"
             }
             return response;
         })
@@ -441,6 +441,7 @@ const showFavourites = () => {
         });
     hide(document.getElementById('favButton'));
     show(document.getElementById('allButton'));
+    show(document.getElementById('favs'));
     getPoems();
 };
 
@@ -464,6 +465,7 @@ const showAll = () => {
         });
     hide(document.getElementById('allButton'));
     show(document.getElementById('favButton'));
+    hide(document.getElementById('favs'));
     getPoems();
 };
 
