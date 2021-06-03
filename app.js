@@ -315,11 +315,8 @@ router.delete("/api/deleteComment/:comment_id", async (context) => {
   }
 })
 
-app.use(router.routes());
-app.use(router.allowedMethods());
 
-
-app.use(async (context) => {
+app.use(async (context, next) => {
   const filePath = context.request.url.pathname;
   const fileWhitelist = ["/index.html", "/js/frontend.js", "/css/styles.css"];
 
@@ -327,8 +324,30 @@ app.use(async (context) => {
     await send(context, filePath, {
       root: `${Deno.cwd()}/static`,
     });
+    return;
+  }
+  await next();
+});
+
+app.use(async (context, next) => {
+  if(context.request.url.pathname === '/api/login') {
+    await next();
+    return;
+  }
+  const token = context.request.headers.get('Authorization');
+  try {
+    await djwt.verify(token, secretKey, jwtAlgorithm);
+    await next();
+  } catch (ex) {
+    context.response.status = 401;
+    context.response.body =
+      {"error": "JWT Authentication error"};
   }
 });
+
+app.use(router.routes());
+app.use(router.allowedMethods());
+
 
 if (import.meta.main) {
     log.info(`Starting server on port: ${PORT}...`);
