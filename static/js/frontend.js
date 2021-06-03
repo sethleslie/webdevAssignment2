@@ -421,6 +421,52 @@ const addPost = (id, newPostInput) => {
       });
 };
 
+const showFavourites = () => {
+    const user_id = sessionStorage.getItem('user_id');
+    fetch(`${api}/poems/${user_id}/notFavs`)
+        .then(response => {
+            if(response.status !== 201) {
+                throw "No favourites"
+            }
+            return response;
+        })
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(poem => {
+                hide(document.getElementById(`poem-${poem.poem_id}`));
+            });
+        })
+        .catch((error) => {
+            showError(error);
+        });
+    hide(document.getElementById('favButton'));
+    show(document.getElementById('allButton'));
+    getPoems();
+};
+
+const showAll = () => {
+    const user_id = sessionStorage.getItem('user_id');
+    fetch(`${api}/poems/${user_id}/notFavs`)
+        .then(response => {
+            if(response.status !== 201) {
+                throw "No favourites"
+            }
+            return response;
+        })
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(poem => {
+                show(document.getElementById(`poem-${poem.poem_id}`));
+            });
+        })
+        .catch((error) => {
+            showError(error);
+        });
+    hide(document.getElementById('allButton'));
+    show(document.getElementById('favButton'));
+    getPoems();
+};
+
   //This method was shown to me by Asher Leslie
   // This keeps track of which api endpoints have been used so that it only polls for data that
   // the user has asked for.
