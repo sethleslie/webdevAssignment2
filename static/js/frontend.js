@@ -113,14 +113,11 @@ const addUser = () => {
     .then((data) => {
         if (data.status !== 201) {
             throw `User Name already exists. Please choose another user name.`
+        } else {
+            alert("Sign up SUCCESSFULL! Please login!");
+            hide(document.getElementById('sign-up'));
+            show(document.getElementById('login'));
         }
-        return data;
-    })
-    .then(data => data.json())
-    .then((data) => {
-        alert("Sign up SUCCESSFULL! Please login!");
-        hide(document.getElementById('sign-up'));
-        show(document.getElementById('login'));
     })
     .catch((error) => {
         showError(error);
