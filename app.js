@@ -29,6 +29,101 @@ import {
   const jwtAlgorithm = "HS256";
 
 
+router.post("/api/login", async (context) => {
+    if(!context.request.hasBody) {
+    context.response.status = 400;
+    context.response.body = {"error": "Expected a JSON object body"};
+    return;
+  }
+
+  const user = await context.request.body('json').value;
+  const password = user.user_pw;
+
+
+  if(!user.user_name || !user.user_pw) {
+    context.response.status = 400;
+    context.response.body = {"error": "Requires a name or a password"};
+    return;
+  }
+ 
+  const results = await client.queryObject`SELECT
+  user_name, user_full_name, user_pw
+  FROM pzusers WHERE user_name=${user.user_name}`;
+
+  if (!results.rows.length) {
+    console.log("Not found!");
+  } else {
+    context.response.status = 201;
+    const db_user = results.rows[0];
+
+    // Check that the password matches - taken from lab examples
+    const matches = sodium.crypto_pwhash_str_verify(
+      db_user.user_pw,
+      password,
+    );
+
+    if (!matches) {
+      context.response.status = 400;
+      context.response.body = {"error": "Password incorrect!"};
+    } else {
+      console.log(`Password matches! Welcome ${db_user.user_full_name}`);
+      //create the Json wed token
+      const jwt = await djwt.create(
+        { alg: jwtAlgorithm, typ: "JWT" }, // header. typ is always JWT
+        {
+          exp: djwt.getNumericDate(60 * 15), // set it to expire in 15 minutes
+          user_id: db_user.user_id,            // any other keys we like
+        },
+        secretKey,
+      );
+
+      context.response.body = JSON.stringify(jwt);
+      context.response.type = 'json';
+    
+    }
+  }
+});
+
+router.post("/api/newUser", async (context) => {
+
+  if(!context.request.hasBody) {
+    context.response.status = 400;
+    context.response.body = {"error": "Expected a JSON object body"};
+    return;
+  }
+
+  const newUser = await context.request.body('json').value;
+
+  const userCheck = await client.queryObject`SELECT
+  user_name, user_full_name, user_pw
+  FROM pzusers WHERE user_name=${newUser.user_name}`;
+
+  if(userCheck.rowCount !== 0){
+    context.response.status = 400;
+    context.response.body = {"error": "User already exists!"};
+    return;
+    }
+
+  let hashedpword = sodium.crypto_pwhash_str(newUser.user_pw,
+  sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+  sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE);
+  
+  const insertUser = await client.queryObject`INSERT INTO PZUSERS 
+  (user_name, user_full_name, user_pw) 
+  VALUES ( ${newUser.user_name}, ${newUser.user_full_name}, ${hashedpword}) 
+  RETURNING (user_id)`;
+
+  if(insertUser.rowCount === 0) {
+    context.response.status = 400;
+    context.response.body = {"error": "Error inserting new user"};
+    return;
+  } else {
+    context.response.status = 201;
+    const thisUser = insertUser.rows[0];
+    context.response.body = thisUser;  
+  }; 
+})
+
 router.post("/api/newPoem", async (context) => {
   
   if(!context.request.hasBody) {
@@ -88,102 +183,7 @@ router.post("/api/poems/newRating", async (context) => {
   }
 });
 
-router.post("/api/newUser", async (context) => {
-
-  if(!context.request.hasBody) {
-    context.response.status = 400;
-    context.response.body = {"error": "Expected a JSON object body"};
-    return;
-  }
-
-  const newUser = await context.request.body('json').value;
-
-  const userCheck = await client.queryObject`SELECT
-  user_name, user_full_name, user_pw
-  FROM pzusers WHERE user_name=${newUser.user_name}`;
-
-  if(userCheck.rowCount !== 0){
-    context.response.status = 400;
-    context.response.body = {"error": "User already exists!"};
-    return;
-    }
-
-  let hashedpword = sodium.crypto_pwhash_str(newUser.user_pw,
-  sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
-  sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE);
-  
-  const insertUser = await client.queryObject`INSERT INTO PZUSERS 
-  (user_name, user_full_name, user_pw) 
-  VALUES ( ${newUser.user_name}, ${newUser.user_full_name}, ${hashedpword}) 
-  RETURNING (user_id)`;
-
-  if(insertUser.rowCount === 0) {
-    context.response.status = 400;
-    context.response.body = {"error": "Error inserting new user"};
-    return;
-  } else {
-    context.response.status = 201;
-    const thisUser = insertUser.rows[0];
-    context.response.body = thisUser;  
-  }; 
-})
-
-router.post("/api/login", async (context) => {
-    console.log("We're in api/login!");
-    if(!context.request.hasBody) {
-    context.response.status = 400;
-    context.response.body = {"error": "Expected a JSON object body"};
-    return;
-  }
-
-  const user = await context.request.body('json').value;
-  const password = user.user_pw;
-
-
-  if(!user.user_name || !user.user_pw) {
-    context.response.status = 400;
-    context.response.body = {"error": "Requires a name or a password"};
-    return;
-  }
- 
-  const results = await client.queryObject`SELECT
-  user_name, user_full_name, user_pw
-  FROM pzusers WHERE user_name=${user.user_name}`;
-
-  if (!results.rows.length) {
-    console.log("Not found!");
-  } else {
-    // We have a user
-    context.response.status = 201;
-    const db_user = results.rows[0];
-
-    // Check that the password matches
-    const matches = sodium.crypto_pwhash_str_verify(
-      db_user.user_pw,
-      password,
-    );
-
-    if (!matches) {
-      context.response.status = 400;
-      context.response.body = {"error": "Password incorrect!"};
-    } else {
-      console.log(`Password matches! Welcome ${db_user.user_full_name}`);
-      const jwt = await djwt.create(
-        { alg: jwtAlgorithm, typ: "JWT" }, // header. typ is always JWT
-        {
-          exp: djwt.getNumericDate(60 * 100), // set it to expire in 15 minutes
-          user_id: db_user.user_id,            // any other keys we like
-        },
-        secretKey,
-      );
-
-      context.response.body = JSON.stringify(jwt);
-      context.response.type = 'json';
-    
-    }
-  }
-});
-
+//add comment to poem
 router.post('/api/poems/:poem_id/posts', async (context) => {
   if(!context.request.hasBody) {
     context.response.status = 400;
@@ -214,6 +214,7 @@ router.post('/api/poems/:poem_id/posts', async (context) => {
   };
 });
 
+//get poems already rated by the user
 router.get('/api/poems/:poem_id/rating/:user_id', async (context) => {
   console.log();
   if (context.params.poem_id && context.params.user_id) {
@@ -229,7 +230,7 @@ router.get('/api/poems/:poem_id/rating/:user_id', async (context) => {
   }
 })
 
-/* Return the user with a given username */
+//Return the user with a given username
 router.get('/api/users/:user_name', async (context) => {
   if (context.params.user_name) {
     const results = await client.queryObject`SELECT 
@@ -244,6 +245,7 @@ router.get('/api/users/:user_name', async (context) => {
   }
 });
 
+//Return body of poem
 router.get('/api/poems/:poem_id/body', async (context) => {
   if (context.params.poem_id) {
     const results = await client.queryObject`SELECT 
@@ -265,10 +267,10 @@ router.get('/api/poems/:poem_id/body', async (context) => {
 }
 })
 
-// Set up a route to listen to /api/poems
+//Return all poems title, author and avg rating
 router.get("/api/poems", async (context) => {
   const results = await client.queryObject`SELECT 
-  poems.poem_id, poem_title, poem_body, poems.user_id, pzusers.user_name, CAST(AVG(NULLIF(ratings.poem_rating, 0)) AS DECIMAL(2,1)) AS avg_rating
+  poems.poem_id, poem_title, poems.user_id, pzusers.user_name, CAST(AVG(NULLIF(ratings.poem_rating, 0)) AS DECIMAL(2,1)) AS avg_rating
   FROM poems
   INNER JOIN pzusers ON poems.user_id=pzusers.user_id
   INNER JOIN ratings ON poems.poem_id=ratings.poem_id
@@ -280,6 +282,7 @@ router.get("/api/poems", async (context) => {
   ));
 });
 
+//Return poems with user rating >= to 4
 router.get("/api/poems/:user_id/favs", async (context) => {
   if (context.params.user_id) {
   const results = await client.queryObject`SELECT poem_id
@@ -297,6 +300,7 @@ router.get("/api/poems/:user_id/favs", async (context) => {
   };
 });
 
+//delete comment from poem
 router.delete("/api/deleteComment/:comment_id", async (context) => {
   if(context.params.comment_id) {
 
@@ -315,7 +319,8 @@ router.delete("/api/deleteComment/:comment_id", async (context) => {
   }
 })
 
-
+//create white list to only allow access to permitted static files
+//code from www.betterprograming.pub - Zack Shapiro, 2020
 app.use(async (context, next) => {
   const filePath = context.request.url.pathname;
   const fileWhitelist = ["/index.html", "/js/frontend.js", "/css/styles.css"];
@@ -329,6 +334,7 @@ app.use(async (context, next) => {
   await next();
 });
 
+//add a bypass for urls that do not require authentication
 app.use(async (context, next) => {
   console.log(context.request.url.pathname);
   if(['/api/login','/api/newUser'].includes(context.request.url.pathname)){
@@ -349,7 +355,7 @@ app.use(async (context, next) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-
+//confirm server port
 if (import.meta.main) {
     log.info(`Starting server on port: ${PORT}...`);
     await app.listen({

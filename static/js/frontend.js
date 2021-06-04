@@ -5,7 +5,7 @@ const api = `http://localhost:${PORT}/api`;
 const app = document.getElementById("app");
 
 const start = () => {
-    //If this is not a new session, login will be skipped
+    //If this is not a new session, login will be skipped, unless authorization has expired
     if (sessionStorage.getItem('user_name') === null) {
       show(document.getElementById('login'));
     } else {
@@ -16,6 +16,7 @@ const start = () => {
     }
   }
 
+//code from lab examples
 function showError(error) {
     const errorDiv = document.createElement("div");
     errorDiv.className = "error";
@@ -120,7 +121,6 @@ const addUser = () => {
         alert("Sign up SUCCESSFULL! Please login!");
         hide(document.getElementById('sign-up'));
         show(document.getElementById('login'));
-        //getPoems();
     })
     .catch((error) => {
         showError(error);
