@@ -51,7 +51,7 @@ const login = () => {
         }
         const data = await res.json();
         sessionStorage.setItem("jwtkey", data);
-        loadPoems(username);
+        showPoemsPage(username);
       })
       .catch((error) => {
         showError(error);
@@ -130,7 +130,7 @@ const addUser = () => {
     }
 };
 
-const loadPoems = (user_name) => {
+const showPoemsPage = (user_name) => {
     fetch(`${api}/users/${user_name}`, {
         headers: {
             "Authorization": sessionStorage.getItem('jwtkey'),
@@ -155,7 +155,7 @@ const loadPoems = (user_name) => {
 };
 
 const getPoems = () => {
-    //get all topics from api
+    //get all poems from api
     fetch(`${api}/poems/`, {
         headers: {
             "Authorization": sessionStorage.getItem('jwtkey'),
@@ -172,32 +172,44 @@ const getPoems = () => {
               if (document.getElementById(`poem-${poem.poem_id}`) === null) {
                 const poemRating = document.createElement('p');
                 poemRating.id = `avg-rating-${poem.poem_id}`;
-                if (poem.avg_rating === null) {
-                    poemRating.innerHTML = 'Poem not yet rated.'
-                } else {
-                    poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
-                };
+                setRating(poem, poemRating);
+                // if (poem.avg_rating === null) {
+                //     poemRating.innerHTML = 'Poem not yet rated.'
+                // } else {
+                //     poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
+                // };
                 const poemItem = document.createElement('li');
                 poemItem.id = `poem-${poem.poem_id}`;
                 poemItem.className = 'poem-item';
                 poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name }</a>`;
+                //add rate button to poems only if poem does NOT belong to user
                 if (poem.user_name !== sessionStorage.getItem('user_name')) {
                     poemItem.innerHTML = `<a onclick="getBodyForPoem(this)" data-id="${ poem.poem_id }">${ poem.poem_title } by ${ poem.user_name }</a><button onclick="ratePoem(this)" data-id="${poem.poem_id}" data-title="${poem.poem_title}" class="poem-rate-btn">Rate</button>`;
                 };
                 poemItem.appendChild(poemRating);
                 poemList.appendChild(poemItem);
                 } else {
+                    //repeated code needs to be refactored
                    const poemRating = document.getElementById(`avg-rating-${poem.poem_id}`);
-                   if (poem.avg_rating === null) {
-                    poemRating.innerHTML = 'Poem not yet rated.'
-                    } else {
-                    poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
-                    };
+                   setRating(poem, poemRating);
+                //    if (poem.avg_rating === null) {
+                //     poemRating.innerHTML = 'Poem not yet rated.'
+                //     } else {
+                //     poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
+                //     };
                 };
             });
         };
     });
 };
+
+const setRating = (poem, poemRating) => {
+    if (poem.avg_rating === null) {
+        poemRating.innerHTML = 'Poem not yet rated.'
+        } else {
+        poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
+        };
+}
 
 const ratePoem = (element) => {
     console.log(`You wanna rate poem: ${element.dataset.id} ${element.dataset.title}`);
