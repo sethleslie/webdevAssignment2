@@ -173,11 +173,6 @@ const getPoems = () => {
                 const poemRating = document.createElement('p');
                 poemRating.id = `avg-rating-${poem.poem_id}`;
                 setRating(poem, poemRating);
-                // if (poem.avg_rating === null) {
-                //     poemRating.innerHTML = 'Poem not yet rated.'
-                // } else {
-                //     poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
-                // };
                 const poemItem = document.createElement('li');
                 poemItem.id = `poem-${poem.poem_id}`;
                 poemItem.className = 'poem-item';
@@ -192,11 +187,6 @@ const getPoems = () => {
                     //repeated code needs to be refactored
                    const poemRating = document.getElementById(`avg-rating-${poem.poem_id}`);
                    setRating(poem, poemRating);
-                //    if (poem.avg_rating === null) {
-                //     poemRating.innerHTML = 'Poem not yet rated.'
-                //     } else {
-                //     poemRating.innerHTML =  `AVG RATING: ${poem.avg_rating}`
-                //     };
                 };
             });
         };
@@ -274,6 +264,7 @@ const getBodyForPoem = (element) => {
       .then(response => response.json())
       .then((data) => {
           let poemBody = document.getElementById(`poem-body-${ element.dataset.id }`);
+          //known error: if all comments are deleted, poem body fails to load
           if (poemBody === null) {
               poemBody = document.createElement('p');
               poemBody.id = `poem-body-${ element.dataset.id }`;
@@ -367,6 +358,7 @@ const hideComment = (element) => {
       })
 };
 
+//show new poem form
 const newPoem = () => {
     hide(document.getElementById('poems'));
     show(document.getElementById('add-poem'));
@@ -494,27 +486,6 @@ const showAll = () => {
     Array.from(allPoems).forEach((element) => {
         show(element);
     });
-/*     const user_id = sessionStorage.getItem('user_id');
-    fetch(`${api}/poems/${user_id}/notFavs`, {
-        headers: {
-            "Authorization": sessionStorage.getItem('jwtkey'),
-        }
-    })
-        .then(response => {
-            if(response.status !== 201) {
-                throw "No favourites"
-            }
-            return response;
-        })
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(poem => {
-                show(document.getElementById(`poem-${poem.poem_id}`));
-            });
-        })
-        .catch((error) => {
-            showError(error);
-        }); */
     hide(document.getElementById('allButton'));
     show(document.getElementById('favButton'));
     hide(document.getElementById('favsHeader'));
@@ -528,7 +499,7 @@ const showAll = () => {
 
   const pollServer = (pollList) => {
       setInterval(() => {
-          //taking the name in the array and calling it as a function by adding () to the name.
+          //taking the function in the array and call it
           pollList.map((pollFunction) => pollFunction());
         },
         //set the delay between intervals in ms
